@@ -15,7 +15,7 @@ public class Main {
 
     public static void main(String[] args) {
         try (ServerSocket serverSocket = new ServerSocket(DEFAULT_PORT)) {
-            // TODO: execute server
+            SERVICE.execute(new Server(serverSocket));
             shutdownServer();
         } catch (IOException e) {
             System.out.println("Failed to start server: " + e.getMessage());
