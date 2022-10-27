@@ -1,0 +1,15 @@
+dependencyResolutionManagement {
+    repositories {
+        mavenCentral()
+        maven {
+            url "https://plugins.gradle.org/m2/"
+        }
+    }
+}
+
+includeBuild('build-logic')
+
+rootProject.name = 'MultiplayerSocketChat'
+include('common')
+include('chat-server')
+include('chat-client')

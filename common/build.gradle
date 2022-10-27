@@ -1,0 +1,5 @@
+plugins {
+    id('common.java-conventions')
+}
+
+group = "${group}.common"

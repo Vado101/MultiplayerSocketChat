@@ -1,0 +1,2 @@
+module socket.chat.common {
+}

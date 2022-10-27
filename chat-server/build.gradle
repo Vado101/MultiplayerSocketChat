@@ -1,0 +1,15 @@
+plugins {
+    id('common.java-conventions')
+    id('application')
+}
+
+group = "${group}.server"
+
+application {
+    mainClass.set("${group}.Main")
+    mainModule.set('socket.chat.server')
+}
+
+dependencies {
+    implementation(project(':common'))
+}
