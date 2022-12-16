@@ -1,49 +1,87 @@
 package com.vadom.socket.chat.server;
 
+import com.vadom.socket.chat.common.HandlersSelector;
+import com.vadom.socket.chat.common.Handler;
+
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.net.SocketException;
 import java.net.SocketTimeoutException;
+import java.util.ArrayList;
+import java.util.List;
 
-public class Server implements Runnable {
-    private static final int TIME_OUT = 1000;
+public class Server extends Handler implements InteractionServer {
+    private static final int START_ID = 0;
     private final ServerSocket serverSocket;
+    private final HandlersSelector handlersSelector;
+    private final List<Session> sessions = new ArrayList<>();
+    private int counterID = START_ID;
 
-    public Server(ServerSocket serverSocket) {
-        if (serverSocket == null) {
-            throw new IllegalArgumentException("serverSocket == null");
+    private Server(ServerSocket serverSocket,
+                   HandlersSelector handlersSelector) {
+        super(START_ID);
+        this.serverSocket = serverSocket;
+        this.handlersSelector = handlersSelector;
+    }
+
+    public static Server start(int port, HandlersSelector handlersSelector) {
+        if (handlersSelector == null) {
+            throw new IllegalArgumentException("eventSelector == null");
         }
 
-        this.serverSocket = serverSocket;
+        final ServerSocket serverSocket;
+
+        try {
+            serverSocket = new ServerSocket(port);
+            serverSocket.setSoTimeout(1000);
+        } catch (IOException e) {
+            System.out.println("Failed to start server. " + e.getMessage());
+
+            return null;
+        }
+
+        return new Server(serverSocket, handlersSelector);
+    }
+
+    public void stop() throws IOException {
+        sendAll("Server shutdown..." , null);
+
+        for (Session session : sessions) {
+            session.setRun(false);
+        }
+
+        serverSocket.close();
+        handlersSelector.stop();
     }
 
     @Override
-    public void run() {
-        System.out.println("----- Start server at address: " +
-                serverSocket.getInetAddress().getHostName() + ":" +
-                serverSocket.getLocalPort() + " -----\n" +
-                "Waiting client at port " +
-                serverSocket.getLocalPort() + "...");
-
+    public void handle() {
+        // Listening to new connections and creating sessions for them
         try {
-            serverSocket.setSoTimeout(TIME_OUT);
-
-            while (!Thread.currentThread().isInterrupted()) {
-                try {
-                    Socket socket = serverSocket.accept();
-                    System.out.println("Connected client with address " +
-                            socket.getRemoteSocketAddress().toString());
-                } catch (SocketTimeoutException e) {
-                    // TODO: do handle
-                } catch (IOException e) {
-                    System.out.println(e.getMessage());
-                }
+            Socket socket = serverSocket.accept();
+            Session session =
+                    new Session(++counterID, socket, this);
+            sessions.add(session);
+            handlersSelector.add(session);
+        } catch (IOException e) {
+            if (!(e instanceof SocketTimeoutException)) {
+                System.out.println("An error occurred when listening to " +
+                        "a socket on the server. " + e.getMessage());
             }
-        } catch (SocketException e) {
-            System.out.println("no socket access" + e.getMessage());
         }
+    }
 
-        System.out.println("----- Disconnect server -----");
+    @Override
+    public void removeSession(Session session) {
+        sessions.remove(session);
+    }
+
+    @Override
+    public void sendAll(String message, Session exceptSession) {
+        for (Session session : sessions) {
+            if (!session.equals(exceptSession)) {
+                session.send(message);
+            }
+        }
     }
 }

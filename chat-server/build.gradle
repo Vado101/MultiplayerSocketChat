@@ -1,6 +1,5 @@
 plugins {
     id('common.java-conventions')
-    id('application')
 }
 
 group = "${group}.server"
@@ -8,10 +7,6 @@ group = "${group}.server"
 application {
     mainClass.set("${group}.Main")
     mainModule.set('socket.chat.server')
-}
-
-run {
-    standardInput(System.in)
 }
 
 dependencies {
