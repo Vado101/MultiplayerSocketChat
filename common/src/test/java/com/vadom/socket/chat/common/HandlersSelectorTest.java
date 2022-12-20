@@ -13,6 +13,17 @@ class HandlersSelectorTest {
     }
 
     @Test
+    void removeTest() {
+        HandlersSelector handlersSelector = new HandlersSelector();
+        Assertions.assertThrows(NullPointerException.class,
+                () -> handlersSelector.remove(null));
+
+        Handler handler = createHandler(handlersSelector.getFreeID());
+        handlersSelector.add(handler);
+        handlersSelector.remove(handler);
+    }
+
+    @Test
     void getFreeID() {
         HandlersSelector handlersSelector = new HandlersSelector();
         int startID = 0;

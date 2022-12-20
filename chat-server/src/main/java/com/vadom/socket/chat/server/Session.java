@@ -29,7 +29,8 @@ public class Session extends Handler {
             outputStream.writeUTF(message);
         } catch (IOException e) {
             System.out.println("Error occurred when sending a message to the " +
-                    "client in session with ID = " + getId() + e.getMessage());
+                    "client in session with ID = " + getId() + ". " +
+                    e.getMessage());
 
             if (!(e instanceof UTFDataFormatException)) {
                 server.removeSession(this);
@@ -53,13 +54,14 @@ public class Session extends Handler {
     @Override
     public void handle() {
         try {
-            if (inputStream.available() != 0) {
+            if (inputStream.available() > 0) {
                 String message = getId() + ": " + inputStream.readUTF();
                 server.sendAll(message, this);
             }
         } catch (IOException e) {
-            System.out.println("Error occurred when receiving a message from " +
-                    "client in session with ID = " + getId() + e.getMessage());
+            System.out.println("Error occurred when receiving a message from" +
+                    " client in session with ID = " + getId() + ". " +
+                    e.getMessage());
 
             if (!(e instanceof UTFDataFormatException)) {
                 server.removeSession(this);

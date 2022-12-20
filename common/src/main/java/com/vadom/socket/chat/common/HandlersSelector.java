@@ -14,10 +14,24 @@ public class HandlersSelector {
     public void add(Handler handler) {
         Objects.requireNonNull(handler);
 
-        if (isRun) {
-            handlerQueue.add(handler);
-        } else {
-            handlers.add(handler);
+        if (!handlers.contains(handler)) {
+            if (isRun) {
+                handlerQueue.add(handler);
+            } else {
+                handlers.add(handler);
+            }
+        }
+    }
+
+    public void remove(Handler handler) {
+        Objects.requireNonNull(handler);
+
+        if (handlers.contains(handler)) {
+            if (isRun) {
+                handler.setRun(false);
+            } else {
+                handlers.remove(handler);
+            }
         }
     }
 
