@@ -1,6 +1,5 @@
 plugins {
     id('common.java-conventions')
-    id('application')
 }
 
 group = "${group}.client"
