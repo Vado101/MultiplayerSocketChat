@@ -10,13 +10,15 @@ public class Main {
         Server server = Server.start(Constant.DEFAULT_PORT, handlersSelector);
 
         if (server != null) {
-            handlersSelector.add(server);
-
             ServerCommandHandler serverCommandHandler =
-                    new ServerCommandHandler(handlersSelector.getFreeID(), server);
-            handlersSelector.add(serverCommandHandler);
+                    new ServerCommandHandler(handlersSelector.getFreeID(),
+                            server);
 
+            handlersSelector.add(server);
+            handlersSelector.add(serverCommandHandler);
             handlersSelector.run();
         }
+
+        handlersSelector.completion();
     }
 }

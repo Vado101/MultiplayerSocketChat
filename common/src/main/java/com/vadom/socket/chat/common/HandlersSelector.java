@@ -11,6 +11,19 @@ public class HandlersSelector {
     private final Queue<Handler> handlerQueue = new LinkedList<>();
     private boolean isRun;
 
+    public int getFreeID() {
+        int id = 0;
+
+        for (int i = 0; i < handlers.size(); ++i) {
+            if (handlers.get(i).getId() == id) {
+                ++id;
+                i = -1;
+            }
+        }
+
+        return id;
+    }
+
     public void add(Handler handler) {
         Objects.requireNonNull(handler);
 
@@ -61,16 +74,10 @@ public class HandlersSelector {
         isRun = false;
     }
 
-    public int getFreeID() {
-        int id = 0;
-
-        for (int i = 0; i < handlers.size(); ++i) {
-            if (handlers.get(i).getId() == id) {
-                ++id;
-                i = -1;
-            }
+    public void completion() {
+        // disable all handlers
+        for (Handler handler : handlers) {
+            handler.setRun(false);
         }
-
-        return id;
     }
 }
