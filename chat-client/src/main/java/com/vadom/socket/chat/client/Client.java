@@ -1,13 +1,14 @@
 package com.vadom.socket.chat.client;
 
 import com.vadom.socket.chat.common.Constant;
+import com.vadom.socket.chat.common.Handler;
 import com.vadom.socket.chat.common.HandlersSelector;
 
 import java.io.*;
 import java.net.Socket;
 import java.util.Scanner;
 
-public class Client {
+public class Client extends Handler {
     private final Socket socket;
     private final HandlersSelector handlersSelector;
     private final DataInputStream inputStream;
@@ -17,6 +18,7 @@ public class Client {
 
     private Client(Socket socket, HandlersSelector handlersSelector)
             throws IOException {
+        super(handlersSelector.getFreeID());
         this.socket = socket;
         this.handlersSelector = handlersSelector;
 
@@ -67,7 +69,9 @@ public class Client {
     }
 
     public void send(String request) throws IOException {
-        outputStream.writeUTF(request);
+        if (request != null) {
+            outputStream.writeUTF(request);
+        }
     }
 
     public String response() throws IOException {
@@ -76,5 +80,18 @@ public class Client {
         }
 
         return null;
+    }
+
+    @Override
+    public void handle() {
+        try {
+            String response = response();
+            if (response != null) {
+                System.out.println(response);
+            }
+        } catch (IOException e) {
+            System.out.println("Error occurred when receiving message " +
+                    "from chat. " + e.getMessage());
+        }
     }
 }

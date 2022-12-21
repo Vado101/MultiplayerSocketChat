@@ -4,16 +4,19 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 
-public abstract class CommandHandler extends Handler {
+public abstract class CommandLineHandler extends Handler {
 
     protected BufferedReader reader;
 
-    public CommandHandler(int id) {
+    public CommandLineHandler(int id) {
         super(id);
         reader = new BufferedReader(new InputStreamReader(System.in));
     }
 
-    public abstract void processing(Commands command);
+    public abstract void commandProcessing(String fullCommand);
+
+    public void inputDataProcessing(String inputData) {}
+
 
     @Override
     public void setRun(boolean run) {
@@ -40,13 +43,14 @@ public abstract class CommandHandler extends Handler {
                 String inputData = reader.readLine();
 
                 if (Command.isCommand(inputData)) {
-                    Commands command = Commands.EXIT.getCommand(inputData);
-                    processing(command);
+                    commandProcessing(inputData);
+                } else {
+                    inputDataProcessing(inputData);
                 }
             }
         } catch (IOException e) {
-            System.out.println("Error occurred when receiving a command from" +
-                    " command line. " + e.getMessage());
+            System.out.println("Error occurred when receiving a input data " +
+                    "from command line. " + e.getMessage());
         } catch (IllegalArgumentException e) {
             int index = e.getMessage().lastIndexOf(".");
             System.out.println("Error: non-existent command entered \"" +

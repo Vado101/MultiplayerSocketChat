@@ -1,21 +1,23 @@
 package com.vadom.socket.chat.server;
 
-import com.vadom.socket.chat.common.CommandHandler;
+import com.vadom.socket.chat.common.CommandLineHandler;
 import com.vadom.socket.chat.common.Commands;
 
 import java.io.IOException;
 
-public class ServerCommandHandler extends CommandHandler {
+public class ServerCommandLineHandler extends CommandLineHandler {
 
     private final Server server;
 
-    public ServerCommandHandler(int id, Server server) {
+    public ServerCommandLineHandler(int id, Server server) {
         super(id);
         this.server = server;
     }
 
     @Override
-    public void processing(Commands command) {
+    public void commandProcessing(String fullCommand) {
+        Commands command = Commands.EXIT.getCommand(fullCommand);
+
         try {
             switch (command) {
                 case EXIT -> server.stop();

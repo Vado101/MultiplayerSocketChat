@@ -10,10 +10,11 @@ public class Main {
         Client client = Client.connect(handlersSelector);
 
         if (client != null) {
-            ClientCommandHandler clientCommandHandler =
-                    new ClientCommandHandler(handlersSelector.getFreeID(),
+            ClientCommandLineHandler clientCommandHandler =
+                    new ClientCommandLineHandler(handlersSelector.getFreeID(),
                             client);
 
+            handlersSelector.add(client);
             handlersSelector.add(clientCommandHandler);
             handlersSelector.run();
         }

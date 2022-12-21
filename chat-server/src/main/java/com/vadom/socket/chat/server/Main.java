@@ -10,8 +10,8 @@ public class Main {
         Server server = Server.start(Constant.DEFAULT_PORT, handlersSelector);
 
         if (server != null) {
-            ServerCommandHandler serverCommandHandler =
-                    new ServerCommandHandler(handlersSelector.getFreeID(),
+            ServerCommandLineHandler serverCommandHandler =
+                    new ServerCommandLineHandler(handlersSelector.getFreeID(),
                             server);
 
             handlersSelector.add(server);
