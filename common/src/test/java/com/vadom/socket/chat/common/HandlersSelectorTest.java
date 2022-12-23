@@ -1,21 +1,22 @@
 package com.vadom.socket.chat.common;
 
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 class HandlersSelectorTest {
 
     @Test
     void addTest() {
         HandlersSelector handlersSelector = new HandlersSelector();
-        Assertions.assertThrows(NullPointerException.class,
+        assertThrows(NullPointerException.class,
                 () -> handlersSelector.add(null));
     }
 
     @Test
     void removeTest() {
         HandlersSelector handlersSelector = new HandlersSelector();
-        Assertions.assertThrows(NullPointerException.class,
+        assertThrows(NullPointerException.class,
                 () -> handlersSelector.remove(null));
 
         Handler handler = createHandler(handlersSelector.getFreeID());
@@ -32,7 +33,7 @@ class HandlersSelectorTest {
             handlersSelector.getFreeID();
         }
 
-        Assertions.assertEquals(countID, handlersSelector.getFreeID());
+        assertEquals(countID, handlersSelector.getFreeID());
     }
 
     private Handler createHandler(int id) {

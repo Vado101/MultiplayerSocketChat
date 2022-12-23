@@ -1,26 +1,24 @@
 package com.vadom.socket.chat.common;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
- * Command consists of: prefix <command> [--<keys>] [<args>]
+ * Command consists of: prefix <command> [--<keys>] [<args>].
+ * Args can be used to pass error messages.
  */
 public interface Command<T> {
 
     T getCommand(String command);
 
 
-    enum LineUp {
+    enum Component {
         COMMAND,
         KEYS,
         ARGS
     }
 
-    // What will be written before the command and identify the entry
-    // as a command
+    // This will be written before the command and identify the entry or
+    // message as a command
     String prefix = "cht ";
     String prefixKeys = "--";
 
@@ -32,35 +30,60 @@ public interface Command<T> {
         return command.indexOf(prefix) == 0;
     }
 
-    static Map<LineUp, List<String>> getLineUpCommand(String command) {
-        Map<LineUp, List<String>> lineUpCommand = new HashMap<>();
 
-        final String[] lineUp = command.substring(prefix.length()).split(" ");
+    /**
+     * NOTE: The first word after the prefix will be considered a command.
+     */
+    static Map<Component, List<String>> getCommandComponents(String command) {
+        Objects.requireNonNull(command, "must not be command == null");
 
+        if (!isCommand(command)) {
+            throw new IllegalArgumentException("Input data isn't command. " +
+                    "Command consists of: prefix <command> [--<keys>] [<args>]");
+        }
+
+        Map<Component, List<String>> components = new HashMap<>();
+        final String[] parts = command.substring(prefix.length()).split(" ");
         List<String> commandName = new ArrayList<>();
-        commandName.add(lineUp[0]);
-        lineUpCommand.put(LineUp.COMMAND, commandName);
+        commandName.add(parts[0]);
+        components.put(Component.COMMAND, commandName);
 
-        for (int i = 1; i < lineUp.length; ++i) {
-            if (lineUp[i].indexOf(prefixKeys) == 0) {
-                setPartCommand(lineUpCommand, LineUp.KEYS,
-                        lineUp[i].substring(prefixKeys.length()));
+        for (int i = 1; i < parts.length; ++i) {
+            if (parts[i].indexOf(prefixKeys) == 0) {
+                setPartCommand(components, Component.KEYS,
+                        parts[i].substring(prefixKeys.length()));
             } else {
-                setPartCommand(lineUpCommand, LineUp.ARGS, lineUp[i]);
+                setPartCommand(components, Component.ARGS, parts[i]);
             }
         }
 
-        return Map.copyOf(lineUpCommand);
+        return Map.copyOf(components);
     }
 
-    private static void setPartCommand(Map<LineUp, List<String>> partsCommand,
-                                LineUp lineUp, String part) {
-        if (partsCommand.containsKey(lineUp)) {
-            partsCommand.get(lineUp).add(part);
+    static String getMessageFromArgs(List<String> args) {
+        if (args == null || args.isEmpty()) {
+            return null;
+        }
+
+        StringBuilder stringBuilder = new StringBuilder();
+
+        for (String arg : args) {
+            stringBuilder.append(arg).append(" ");
+        }
+
+        stringBuilder.deleteCharAt(stringBuilder.length() - 1);
+
+        return stringBuilder.toString();
+    }
+
+    private static void setPartCommand(Map<Component, List<String>> components,
+                                       Component component, String part) {
+        if (components.containsKey(component)) {
+            components.get(component).add(part);
         } else {
             List<String> list = new ArrayList<>();
             list.add(part);
-            partsCommand.put(lineUp, list);
+            components.put(component, list);
         }
     }
 }
