@@ -26,21 +26,13 @@ class HandlersSelectorTest {
     @Test
     void getFreeID() {
         HandlersSelector handlersSelector = new HandlersSelector();
-        int startID = 0;
+        int countID = 100;
 
-        Assertions.assertEquals(startID, handlersSelector.getFreeID());
+        for (int i = 0; i < countID; ++i) {
+            handlersSelector.getFreeID();
+        }
 
-        Handler handler1 = createHandler(startID);
-        Handler handler2 = createHandler(++startID);
-        handlersSelector.add(handler1);
-        handlersSelector.add(handler2);
-
-        Assertions.assertEquals(++startID, handlersSelector.getFreeID());
-
-        Handler handler3 = createHandler(++startID);
-        handlersSelector.add(handler3);
-
-        Assertions.assertEquals(--startID, handlersSelector.getFreeID());
+        Assertions.assertEquals(countID, handlersSelector.getFreeID());
     }
 
     private Handler createHandler(int id) {

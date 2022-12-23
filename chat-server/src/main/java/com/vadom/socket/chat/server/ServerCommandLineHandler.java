@@ -1,9 +1,12 @@
 package com.vadom.socket.chat.server;
 
+import com.vadom.socket.chat.common.Command;
 import com.vadom.socket.chat.common.CommandLineHandler;
 import com.vadom.socket.chat.common.Commands;
 
 import java.io.IOException;
+import java.util.List;
+import java.util.Map;
 
 public class ServerCommandLineHandler extends CommandLineHandler {
 
@@ -16,6 +19,8 @@ public class ServerCommandLineHandler extends CommandLineHandler {
 
     @Override
     public void commandProcessing(String fullCommand) {
+        Map<Command.LineUp, List<String>> lineUpMap =
+                Command.getLineUpCommand(fullCommand);
         Commands command = Commands.EXIT.getCommand(fullCommand);
 
         try {

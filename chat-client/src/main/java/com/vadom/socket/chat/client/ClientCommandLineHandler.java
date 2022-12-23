@@ -20,7 +20,10 @@ public class ClientCommandLineHandler extends CommandLineHandler {
 
         try {
             switch (command) {
-                case EXIT -> client.exit();
+                case EXIT -> {
+                    inputDataProcessing(fullCommand);
+                    client.exit();
+                }
             }
         } catch (IOException e) {
             System.out.println("Error occurred when processing a command " +

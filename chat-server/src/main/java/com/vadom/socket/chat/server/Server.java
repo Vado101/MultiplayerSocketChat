@@ -7,8 +7,7 @@ import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketTimeoutException;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 public class Server extends Handler implements InteractionServer {
     private static final int TIME_OUT = 500;
@@ -23,6 +22,7 @@ public class Server extends Handler implements InteractionServer {
         this.handlersSelector = handlersSelector;
     }
 
+    // TODO: port replace on the socket for tests
     public static Server start(int port, HandlersSelector handlersSelector) {
         if (handlersSelector == null) {
             throw new IllegalArgumentException("eventSelector == null");
@@ -46,17 +46,34 @@ public class Server extends Handler implements InteractionServer {
     }
 
     public void stop() throws IOException {
-        String quit = "Server shutdown...";
-        sendAll(quit, null);
+        if (isRun) {
+            String quit = "Server shutdown...";
+            sendAll(quit, null);
 
-        for (Session session : sessions) {
-            session.setRun(false);
+            close();
+            handlersSelector.stop();
+
+            System.out.println(quit);
         }
+    }
 
-        serverSocket.close();
-        handlersSelector.stop();
+    @Override
+    public void close() {
+        if (isRun) {
+            for (Session session : sessions) {
+                session.close();
+            }
 
-        System.out.println(quit);
+            sessions.clear();
+            super.close();
+
+            try {
+                serverSocket.close();
+            } catch (IOException e) {
+                System.out.println("Error occurred when closing a server " +
+                        "socket. " + e.getMessage());
+            }
+        }
     }
 
     @Override
@@ -81,13 +98,21 @@ public class Server extends Handler implements InteractionServer {
 
     @Override
     public void removeSession(Session session) {
-        sessions.remove(session);
+        if (session != null) {
+            sessions.remove(session);
+            sendAll("Client with ID = " + session.getId() +
+                    " has left the chat", null);
+            System.out.println("Client disconnected " +
+                    " with ID = " + session.getId());
+
+            handlersSelector.remove(session);
+        }
     }
 
     @Override
     public void sendAll(String message, Session exceptSession) {
         for (Session session : sessions) {
-            if (!session.equals(exceptSession)) {
+            if (!session.equals(exceptSession) && session.isRun()) {
                 session.send(message);
             }
         }

@@ -6,7 +6,7 @@ import java.io.InputStreamReader;
 
 public abstract class CommandLineHandler extends Handler {
 
-    protected BufferedReader reader;
+    protected final BufferedReader reader;
 
     public CommandLineHandler(int id) {
         super(id);
@@ -19,27 +19,20 @@ public abstract class CommandLineHandler extends Handler {
 
 
     @Override
-    public void setRun(boolean run) {
-        if (isRun != run) {
-            isRun = run;
-
-            if (isRun) {
-                reader = new BufferedReader(new InputStreamReader(System.in));
-            } else {
-                try {
-                    reader.close();
-                } catch (IOException e) {
-                    System.out.println("Error occurred when closing the " +
-                            "input stream for command line. " + e.getMessage());
-                }
-            }
+    public void close() {
+        try {
+            super.close();
+            reader.close();
+        } catch (IOException e) {
+            System.out.println("Error occurred when closing the " +
+                    "input stream for command line. " + e.getMessage());
         }
     }
 
     @Override
     public void handle() {
         try {
-            if (isRun && reader.ready()) {
+            if (reader.ready()) {
                 String inputData = reader.readLine();
 
                 if (Command.isCommand(inputData)) {

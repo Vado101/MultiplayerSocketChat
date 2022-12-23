@@ -1,12 +1,14 @@
 package com.vadom.socket.chat.common;
 
-public abstract class Handler {
+import java.io.Closeable;
+
+public abstract class Handler implements Closeable {
     private final int id;
     protected boolean isRun;
 
     public Handler(int id) {
         this.id = id;
-        isRun = true;
+        this.isRun = true;
     }
 
     public int getId() {
@@ -17,8 +19,9 @@ public abstract class Handler {
         return isRun;
     }
 
-    public void setRun(boolean run) {
-        isRun = run;
+    @Override
+    public void close() {
+        isRun = false;
     }
 
     public abstract void handle();

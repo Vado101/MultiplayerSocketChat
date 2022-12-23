@@ -8,20 +8,13 @@ import java.util.*;
 public class HandlersSelector {
     private final List<Handler> handlers =
             Collections.synchronizedList(new LinkedList<>());
-    private final Queue<Handler> handlerQueue = new LinkedList<>();
+    private final Queue<Handler> handlersToAdd = new LinkedList<>();
+    private final Queue<Handler> handlersToRemove = new LinkedList<>();
     private boolean isRun;
+    private int id;
 
     public int getFreeID() {
-        int id = 0;
-
-        for (int i = 0; i < handlers.size(); ++i) {
-            if (handlers.get(i).getId() == id) {
-                ++id;
-                i = -1;
-            }
-        }
-
-        return id;
+        return id++;
     }
 
     public void add(Handler handler) {
@@ -29,7 +22,7 @@ public class HandlersSelector {
 
         if (!handlers.contains(handler)) {
             if (isRun) {
-                handlerQueue.add(handler);
+                handlersToAdd.add(handler);
             } else {
                 handlers.add(handler);
             }
@@ -41,7 +34,7 @@ public class HandlersSelector {
 
         if (handlers.contains(handler)) {
             if (isRun) {
-                handler.setRun(false);
+                handlersToRemove.add(handler);
             } else {
                 handlers.remove(handler);
             }
@@ -52,20 +45,16 @@ public class HandlersSelector {
         isRun = true;
 
         while (isRun) {
-            ListIterator<Handler> iterator = handlers.listIterator();
-
-            while (!handlerQueue.isEmpty()) {
-                iterator.add(handlerQueue.poll());
+            while (!handlersToAdd.isEmpty()) {
+                handlers.add(handlersToAdd.poll());
             }
 
-            while (iterator.hasNext()) {
-                Handler handler = iterator.next();
+            while (!handlersToRemove.isEmpty()) {
+                handlers.remove(handlersToRemove.poll());
+            }
 
-                if (handler.isRun()) {
-                    handler.handle();
-                } else {
-                    iterator.remove();
-                }
+            for (Handler handler : handlers) {
+                handler.handle();
             }
         }
     }
@@ -75,9 +64,10 @@ public class HandlersSelector {
     }
 
     public void completion() {
-        // disable all handlers
         for (Handler handler : handlers) {
-            handler.setRun(false);
+            handler.close();
         }
+
+        handlers.clear();
     }
 }
