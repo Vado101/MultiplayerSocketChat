@@ -1,11 +1,14 @@
 package com.vadom.socket.chat.client;
 
-import com.vadom.socket.chat.common.Constant;
-import com.vadom.socket.chat.common.Handler;
-import com.vadom.socket.chat.common.HandlersSelector;
+import com.vadom.socket.chat.common.*;
 
 import java.io.*;
+import java.net.ProtocolException;
 import java.net.Socket;
+import java.time.Duration;
+import java.time.Instant;
+import java.util.List;
+import java.util.Map;
 import java.util.Scanner;
 
 public class Client extends Handler {
@@ -30,6 +33,10 @@ public class Client extends Handler {
 
     public String getName() {
         return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
     }
 
     public static Client connect(HandlersSelector handlersSelector) {
@@ -74,7 +81,7 @@ public class Client extends Handler {
         }
     }
 
-    public String response() throws IOException {
+    public String getResponse() throws IOException {
         if (inputStream.available() > 0) {
             return inputStream.readUTF();
         }
@@ -82,10 +89,53 @@ public class Client extends Handler {
         return null;
     }
 
+    /**
+     * Implemented login-protocol:
+     * 1. request: {@code Command.prefix} login
+     * 2. response: {@code Command.prefix} login --name Entered your name
+     * 3. request: {@code Command.prefix} login --name username
+     * 4. response: {@code Command.prefix} login --confirm OK
+     */
+    public void login() throws IOException {
+        String loginCommand = Commands
+                .createCommand(Commands.LOGIN, null);
+
+        Map<Command.Component, List<String>> components =
+                getResponse(loginCommand, Commands.LOGIN, Commands.KEY.NAME);
+        List<String> args = components.get(Command.Component.ARGS);
+
+        if (args != null) {
+            System.out.println(Command.getMessageFromArgs(args));
+        } else {
+            System.out.println("Entered you name:");
+        }
+
+        // Getting username from command line
+        String name = scanner.next();
+        loginCommand = Commands.createCommand(Commands.LOGIN,
+                new Commands.KEY[]{Commands.KEY.NAME}, name);
+        components = getResponse(loginCommand, Commands.LOGIN,
+                Commands.KEY.CONFIRM);
+        args = components.get(Command.Component.ARGS);
+
+        if (args != null && args.contains(Commands.ErrorCode.OK.name())) {
+            setName(name);
+            System.out.println("Login is successful\n" +
+                    Command.getMessageFromArgs(args.subList(1, args.size())));
+        } else {
+            System.out.println("Login is failed");
+        }
+    }
+
+    public void logout() {
+        String loginCommand = Commands
+                .createCommand(Commands.LOGOUT, null);
+    }
+
     @Override
     public void handle() {
         try {
-            String response = response();
+            String response = getResponse();
             if (response != null) {
                 System.out.println(response);
             }
@@ -93,5 +143,80 @@ public class Client extends Handler {
             System.out.println("Error occurred when receiving message " +
                     "from chat. " + e.getMessage());
         }
+    }
+
+
+    private Map<Command.Component, List<String>> getResponse(
+            String fullCommand,
+            Commands responseCommand,
+            Commands.KEY... responseKeys) throws IOException {
+        send(fullCommand);
+        String response = waitingResponse(5000);
+
+        return checkResponse(response, responseCommand, responseKeys);
+    }
+
+    /**
+     * Waiting for the server response with delay.
+     * Waits for a server response for the specified number of milliseconds.
+     *
+     * @param delay
+     *            Delay in milliseconds.
+     *
+     * @return Server response as a string or {@code null} if the timeout has
+     *         expired.
+     * @throws IOException the stream has been closed and the contained input
+     *         stream does not support reading after close, or another
+     *         I/O error occurs.
+     */
+    private String waitingResponse(int delay) throws IOException {
+        String response;
+        long interval;
+        Instant finish;
+        Instant start = Instant.now();
+
+        do {
+            response = getResponse();
+            finish = Instant.now();
+            interval = Duration.between(start, finish).toMillis();
+        } while (response == null && interval < delay);
+
+        return response;
+    }
+
+    private Map<Command.Component, List<String>> checkResponse(
+            String response,
+            Commands responseCommand,
+            Commands.KEY... responseKeys) throws ProtocolException {
+        if (response == null) {
+            throw new ProtocolException("Server not responding");
+        }
+
+        if (!Command.isCommand(response)) {
+            throw new ProtocolException("Received an unknown command from " +
+                    "the server: " + response);
+        }
+
+        if (Commands.LOGIN.getCommand(response) != responseCommand) {
+            throw new ProtocolException("Received an invalid command from " +
+                    "the server: " + response);
+        }
+
+        if (responseKeys != null &&
+                !Commands.containsKey(response, responseKeys)) {
+            throw new ProtocolException("Received command from " +
+                    "server does not contain expected keys: " + response);
+        }
+
+        Map<Command.Component, List<String>> components =
+                Command.getCommandComponents(response);
+        String error = Commands.checkingArgumentsForErrorMessage(
+                components.get(Command.Component.ARGS));
+
+        if (error != null) {
+            throw new ProtocolException(error);
+        }
+
+        return components;
     }
 }

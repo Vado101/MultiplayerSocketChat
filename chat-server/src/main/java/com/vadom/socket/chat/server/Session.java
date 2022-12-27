@@ -17,6 +17,8 @@ public class Session extends Handler {
     private final InteractionServer server;
     private final DataInputStream inputStream;
     private final DataOutputStream outputStream;
+    private boolean login;
+    private String username;
 
     public Session(int id, Socket socket, InteractionServer server)
             throws IOException {
@@ -28,12 +30,20 @@ public class Session extends Handler {
         outputStream = new DataOutputStream(socket.getOutputStream());
     }
 
+    public boolean isLogin() {
+        return login;
+    }
+
+    public String getUsername() {
+        return username;
+    }
+
     public void send(String message) {
         try {
             outputStream.writeUTF(message);
         } catch (IOException e) {
-            System.out.println("Error occurred when sending a message to the " +
-                    "client in session with ID = " + getId() + ". " +
+            System.out.println("Error occurred when sending a message to the" +
+                    " client in session with ID = " + getId() + ". " +
                     e.getMessage());
 
             if (!(e instanceof UTFDataFormatException)) {
@@ -67,7 +77,7 @@ public class Session extends Handler {
                     if (Command.isCommand(inputData)) {
                         commandProcessing(inputData);
                     } else {
-                        String message = getId() + ": " + inputData;
+                        String message = getUsername() + ": " + inputData;
                         server.sendAll(message, this);
                     }
                 }
@@ -89,17 +99,61 @@ public class Session extends Handler {
     }
 
     private void commandProcessing(String fullCommand) {
-        Map<Command.LineUp, List<String>> lineUpMap =
-                Command.getLineUpCommand(fullCommand);
         Commands command = Commands.EXIT.getCommand(fullCommand);
+        switch (command) {
+            case EXIT -> server.removeSession(this);
+            case LOGIN -> login(fullCommand);
+            case LOGOUT -> login = false;
+        }
+    }
 
-//        try {
-            switch (command) {
-                case EXIT -> server.removeSession(this);
+    /**
+     * Implemented login-protocol:
+     * 1. request: {@code Command.prefix} login
+     * 2. response: {@code Command.prefix} login --name Entered your name
+     * 3. request: {@code Command.prefix} login --name username
+     * 4. response: {@code Command.prefix} login --confirm OK
+     */
+    private void login(String fullCommand) {
+        Map<Command.Component, List<String>> components =
+                Command.getCommandComponents(fullCommand);
+
+        if (!login) {
+            if (Commands.containsKey(fullCommand, Commands.KEY.NAME)) {
+                // if the user has not entered a name
+                if (components.get(Command.Component.ARGS).isEmpty()) {
+                    send(Commands.createCommand(
+                            Commands.LOGIN,
+                            new Commands.KEY[]{Commands.KEY.NAME},
+                            "Entered your name, please"));
+                } else {
+                    username = components.get(Command.Component.ARGS).get(0);
+
+                    // TODO: check username is correct
+
+                    send(Commands.createCommand(
+                            Commands.LOGIN,
+                            new Commands.KEY[]{Commands.KEY.CONFIRM},
+                            Commands.ErrorCode.OK.name() +
+                            " Welcome to the chat, you are known as " +
+                                    username));
+                    server.sendAll(username + " has entered the chat", this);
+                    System.out.println("ID = " + getId() +
+                            " login name: " + username);
+                    login = true;
+                }
+            } else {
+                send(Commands.createCommand(
+                        Commands.LOGIN,
+                        new Commands.KEY[]{Commands.KEY.NAME},
+                        "Entered your name, please"));
             }
-//        } catch (IOException e) {
-//            System.out.println("Error occurred when processing a command " +
-//                    command.name() + " from command line. " + e.getMessage());
-//        }
+        } else {
+            send(Commands.createCommand(
+                    Commands.LOGIN,
+                    new Commands.KEY[]{Commands.KEY.NAME},
+                    Commands.ErrorCode.FAILED.name() + ":",
+                    "You are already logged in as " + getUsername()));
+        }
     }
 }

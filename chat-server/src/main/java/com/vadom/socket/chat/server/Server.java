@@ -100,10 +100,11 @@ public class Server extends Handler implements InteractionServer {
     public void removeSession(Session session) {
         if (session != null) {
             sessions.remove(session);
-            sendAll("Client with ID = " + session.getId() +
+            sendAll(session.getUsername() +
                     " has left the chat", null);
             System.out.println("Client disconnected " +
-                    " with ID = " + session.getId());
+                    "with ID = " + session.getId() +
+                    ", username = " + session.getUsername());
 
             handlersSelector.remove(session);
         }
@@ -112,7 +113,9 @@ public class Server extends Handler implements InteractionServer {
     @Override
     public void sendAll(String message, Session exceptSession) {
         for (Session session : sessions) {
-            if (!session.equals(exceptSession) && session.isRun()) {
+            if (!session.equals(exceptSession) &&
+                    session.isRun() &&
+                    session.isLogin()) {
                 session.send(message);
             }
         }

@@ -24,6 +24,9 @@ public class ClientCommandLineHandler extends CommandLineHandler {
                     inputDataProcessing(fullCommand);
                     client.exit();
                 }
+                case LOGIN -> client.login();
+                case HELP -> System.out.println(
+                        Commands.commandHelp(Commands.values()));
             }
         } catch (IOException e) {
             System.out.println("Error occurred when processing a command " +
