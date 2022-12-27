@@ -18,6 +18,7 @@ public class Client extends Handler {
     private final DataOutputStream outputStream;
     private final Scanner scanner;
     private String name;
+    private boolean isLogin;
 
     private Client(Socket socket, HandlersSelector handlersSelector)
             throws IOException {
@@ -37,6 +38,10 @@ public class Client extends Handler {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public boolean isLogin() {
+        return isLogin;
     }
 
     public static Client connect(HandlersSelector handlersSelector) {
@@ -71,6 +76,7 @@ public class Client extends Handler {
     }
 
     public void exit() throws IOException {
+        send(Commands.createCommand(Commands.EXIT, null));
         disconnect();
         handlersSelector.stop();
     }
@@ -120,16 +126,35 @@ public class Client extends Handler {
 
         if (args != null && args.contains(Commands.ErrorCode.OK.name())) {
             setName(name);
-            System.out.println("Login is successful\n" +
+            System.out.println(
                     Command.getMessageFromArgs(args.subList(1, args.size())));
+            isLogin = true;
         } else {
             System.out.println("Login is failed");
         }
     }
 
-    public void logout() {
-        String loginCommand = Commands
+    /**
+     * Implemented login-protocol:
+     * 1. request: {@code Command.prefix} logout
+     * 2. response: {@code Command.prefix} logout --confirm OK You has left the chat
+     */
+    public void logout() throws IOException {
+        String logoutCommand = Commands
                 .createCommand(Commands.LOGOUT, null);
+
+        Map<Command.Component, List<String>> components =
+                getResponse(logoutCommand, Commands.LOGOUT,
+                        Commands.KEY.CONFIRM);
+        List<String> args = components.get(Command.Component.ARGS);
+
+        if (args != null && args.contains(Commands.ErrorCode.OK.name())) {
+            System.out.println(
+                    Command.getMessageFromArgs(args.subList(1, args.size())));
+            isLogin = false;
+        } else {
+            System.out.println("Logout is failed");
+        }
     }
 
     @Override

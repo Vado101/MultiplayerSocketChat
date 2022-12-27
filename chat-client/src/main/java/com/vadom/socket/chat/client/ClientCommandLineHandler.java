@@ -1,5 +1,6 @@
 package com.vadom.socket.chat.client;
 
+import com.vadom.socket.chat.common.Command;
 import com.vadom.socket.chat.common.CommandLineHandler;
 import com.vadom.socket.chat.common.Commands;
 
@@ -20,13 +21,12 @@ public class ClientCommandLineHandler extends CommandLineHandler {
 
         try {
             switch (command) {
-                case EXIT -> {
-                    inputDataProcessing(fullCommand);
-                    client.exit();
-                }
+                case EXIT -> client.exit();
                 case LOGIN -> client.login();
+                case LOGOUT -> client.logout();
                 case HELP -> System.out.println(
-                        Commands.commandHelp(Commands.values()));
+                        Commands.commandHelp(Commands.LOGIN, Commands.LOGOUT,
+                                Commands.EXIT, Commands.HELP));
             }
         } catch (IOException e) {
             System.out.println("Error occurred when processing a command " +
@@ -37,7 +37,15 @@ public class ClientCommandLineHandler extends CommandLineHandler {
     @Override
     public void inputDataProcessing(String inputData) {
         try {
-            client.send(inputData);
+            if (client.isLogin()) {
+                if (inputData.matches(".*\\S.*")) {
+                    client.send(inputData);
+                }
+            } else {
+                System.out.println("You need to login the chat. " +
+                        "Entered command \"" +
+                        Command.prefix + Commands.LOGIN + "\"");
+            }
         } catch (IOException e) {
             System.out.println("Error occurred when sending a message " +
                     "to the server. " + e.getMessage());

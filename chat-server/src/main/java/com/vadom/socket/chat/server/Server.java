@@ -100,8 +100,12 @@ public class Server extends Handler implements InteractionServer {
     public void removeSession(Session session) {
         if (session != null) {
             sessions.remove(session);
-            sendAll(session.getUsername() +
-                    " has left the chat", null);
+
+            if (session.isLogin()) {
+                sendAll(session.getUsername() +
+                        " has left the chat", null);
+            }
+
             System.out.println("Client disconnected " +
                     "with ID = " + session.getId() +
                     ", username = " + session.getUsername());

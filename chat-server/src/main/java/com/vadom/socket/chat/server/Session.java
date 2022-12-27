@@ -103,7 +103,7 @@ public class Session extends Handler {
         switch (command) {
             case EXIT -> server.removeSession(this);
             case LOGIN -> login(fullCommand);
-            case LOGOUT -> login = false;
+            case LOGOUT -> logout();
         }
     }
 
@@ -153,7 +153,32 @@ public class Session extends Handler {
                     Commands.LOGIN,
                     new Commands.KEY[]{Commands.KEY.NAME},
                     Commands.ErrorCode.FAILED.name() + ":",
-                    "You are already logged in as " + getUsername()));
+                    " You are already logged in as " + getUsername()));
+        }
+    }
+
+    /**
+     * Implemented login-protocol:
+     * 1. request: {@code Command.prefix} logout
+     * 2. response: {@code Command.prefix} logout --confirm OK You has left the chat
+     */
+    public void logout() {
+        if (login) {
+            send(Commands.createCommand(
+                    Commands.LOGOUT,
+                    new Commands.KEY[]{Commands.KEY.CONFIRM},
+                    Commands.ErrorCode.OK.name() +
+                            " You has left the chat"));
+            login = false;
+            server.sendAll(username + " has left the chat", this);
+            System.out.println("ID = " + getId() +
+                    " logout name: " + username);
+        } else {
+            send(Commands.createCommand(
+                    Commands.LOGOUT,
+                    new Commands.KEY[]{Commands.KEY.CONFIRM},
+                    Commands.ErrorCode.FAILED.name() + ":" +
+                            " You are not logged into the chat"));
         }
     }
 }
