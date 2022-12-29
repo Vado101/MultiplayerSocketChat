@@ -18,15 +18,10 @@ public class ServerCommandLineHandler extends CommandLineHandler {
     public void commandProcessing(String fullCommand) {
         Commands command = Commands.EXIT.getCommand(fullCommand);
 
-        try {
-            switch (command) {
-                case EXIT -> server.stop();
-                case HELP -> System.out.println(Commands.commandHelp(
-                        Commands.EXIT, Commands.HELP));
-            }
-        } catch (IOException e) {
-            System.out.println("Error occurred when processing a command " +
-                    command.name() + " from command line. " + e.getMessage());
+        switch (command) {
+            case EXIT -> server.stop();
+            case HELP -> System.out.println(Commands.commandHelp(
+                    Commands.EXIT, Commands.HELP));
         }
     }
 }

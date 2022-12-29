@@ -45,7 +45,7 @@ public class Server extends Handler implements InteractionServer {
         return null;
     }
 
-    public void stop() throws IOException {
+    public void stop() {
         if (isRun) {
             String quit = "Server shutdown...";
             sendAll(quit, null);
