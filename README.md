@@ -12,26 +12,23 @@ Once started, the chat server waits for clients to connect. The client, in turn,
 The chat client and server are controlled by commands from the console. Every command starts with `cht` prefix. All other entered data (without prefix) are defined in the client as messages for other clients. A list of commands can be obtained using the command `cht help`.
 
 ## How to run
-Starting the server from the command line:
+Run the server from the command line:
 ```bash
-./gradlew chat-server:run -q --console=plain
+$ ./gradlew chat-server:run -q --console=plain
 ```
 
-Launching the client from the command line:
+Run the client from the command line:
 ```bash
-./gradlew chat-client:run -q --console=plain
+$ ./gradlew chat-client:run -q --console=plain
 ```
 
 ## Work example
-First client:
-
+First client:<br>
 ![First client](pics/client1.png)
 
-Second client:
-
+Second client:<br>
 ![Second client](pics/client2.png)
 
-Server:
-
+Server:<br>
 ![Server](pics/server.png)
 
